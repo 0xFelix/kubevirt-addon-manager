@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubevirt-addon-manager
+  labels:
+    app: kubevirt-addon-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubevirt-addon-manager
+  template:
+    metadata:
+      labels:
+        app: kubevirt-addon-manager
+    spec:
+      terminationGracePeriodSeconds: 10
+      serviceAccountName: kubevirt-addon-manager
+      containers:
+      - name: kubevirt-addon-manager
+        image: manager:latest
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault

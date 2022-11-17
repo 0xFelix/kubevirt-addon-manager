@@ -1,0 +1,8 @@
+apiVersion: addon.open-cluster-management.io/v1alpha1
+kind: ClusterManagementAddOn
+metadata:
+  name: kubevirt-addon
+spec:
+  addOnMeta:
+    description: "kubevirt-addon is an add-on that deploys KubeVirt onto managed clusters"
+    displayName: KubeVirt Add-On

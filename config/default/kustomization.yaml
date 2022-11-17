@@ -1,0 +1,7 @@
+# Adds namespace to all resources.
+namespace: kubevirt
+bases:
+- ../namespace
+- ../rbac
+- ../manager
+- ../addon
