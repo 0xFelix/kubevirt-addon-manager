@@ -13,8 +13,7 @@ COPY Makefile Makefile
 COPY main.go main.go
 COPY controller/ controller/
 
-# Build
-RUN make manager
+RUN make build
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal
 
