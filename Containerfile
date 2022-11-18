@@ -26,3 +26,4 @@ COPY --from=builder /workspace/bin/manager .
 USER 65534:65534
 
 ENTRYPOINT ["/manager"]
+CMD ["controller"]
