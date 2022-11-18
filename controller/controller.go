@@ -20,8 +20,9 @@ import (
 )
 
 const (
-	addonName        = "kubevirt-addon"
-	installNamespace = "kubevirt-hyperconverged"
+	addonName          = "kubevirt-addon"
+	installNamespace   = "kubevirt-hyperconverged"
+	hyperConvergedName = "kubevirt-hyperconverged"
 )
 
 //go:embed manifests
@@ -37,13 +38,15 @@ func newRegistrationOption(kubeConfig *rest.Config, addonName, agentName string)
 
 func getDefaultValues(cluster *clusterv1.ManagedCluster, addon *addonv1alpha1.ManagedClusterAddOn) (addonfactory.Values, error) {
 	manifestConfig := struct {
-		ClusterName      string
-		InstallNamespace string
-		KubeConfigSecret string
+		ClusterName        string
+		HyperConvergedName string
+		InstallNamespace   string
+		KubeConfigSecret   string
 	}{
-		ClusterName:      cluster.Name,
-		InstallNamespace: installNamespace,
-		KubeConfigSecret: fmt.Sprintf("%s-hub-kubeconfig", addon.Name),
+		ClusterName:        cluster.Name,
+		HyperConvergedName: hyperConvergedName,
+		InstallNamespace:   installNamespace,
+		KubeConfigSecret:   fmt.Sprintf("%s-hub-kubeconfig", addon.Name),
 	}
 
 	return addonfactory.StructToValues(manifestConfig), nil
@@ -58,7 +61,7 @@ func agentHealthProber() *agent.HealthProber {
 					ResourceIdentifier: workv1.ResourceIdentifier{
 						Group:     "hco.kubevirt.io",
 						Resource:  "hyperconverged",
-						Name:      "kubevirt-hyperconverged",
+						Name:      hyperConvergedName,
 						Namespace: installNamespace,
 					},
 					ProbeRules: []workv1.FeedbackRule{

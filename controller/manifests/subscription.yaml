@@ -1,10 +1,11 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: hco-operatorhub
+  name: community-kubevirt-hyperconverged
   namespace: {{ .InstallNamespace }}
 spec:
-  channel: 1.9.0
+  channel: stable
+  installPlanApproval: Automatic
   name: community-kubevirt-hyperconverged
-  source: kubevirt-hyperconverged
+  source: community-operators
   sourceNamespace: openshift-marketplace
