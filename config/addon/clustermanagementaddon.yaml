@@ -4,5 +4,5 @@ metadata:
   name: kubevirt-addon
 spec:
   addOnMeta:
-    description: "kubevirt-addon is an add-on that deploys KubeVirt onto managed clusters"
+    description: "kubevirt-addon is an add-on that deploys KubeVirt HCO onto managed OpenShift clusters"
     displayName: KubeVirt Add-On
