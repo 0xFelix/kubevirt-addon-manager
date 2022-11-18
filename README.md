@@ -1,6 +1,6 @@
 # kubevirt-addon-manager
 
-Open Cluster Management add-on that deploys KubeVirt onto managed clusters.
+Open Cluster Management add-on that deploys KubeVirt HCO onto managed OpenShift clusters.
 
 ## License
 
@@ -17,7 +17,7 @@ make deploy
 ## Usage
 
 On a hub cluster with the kubevirt-addon-manager running, create a ManagedClusterAddOn in the namespace
-of the managed cluster you want KubeVirt deployed onto.
+of the managed OpenShift cluster you want to deploy KubeVirt HCO onto.
 
 Sample ManagedClusterAddOn (replace `managed_cluster_namespace` with the appropriate managed cluster name):
 
@@ -34,8 +34,10 @@ spec: {}
 
 ### Running the controller locally pointing to a remote cluster
 
-If you would like to run the kubevirt-addon-manager outside the cluster, execute:
+If you would like to run the kubevirt-addon-manager controller outside of a cluster, execute:
 
 ```shell
 make run
 ```
+
+This will use the kubeconfig found in environment variable `KUBECONFIG` or default to `~/.kube/config`.
