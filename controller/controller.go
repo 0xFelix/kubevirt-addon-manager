@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
@@ -20,9 +21,13 @@ import (
 )
 
 const (
-	addonName          = "kubevirt-addon"
-	installNamespace   = "kubevirt-hyperconverged"
-	hyperConvergedName = "kubevirt-hyperconverged"
+	addonName = "kubevirt-addon"
+
+	managedClusterInstallAddonLabel      = "addons.open-cluster-management.io/kubevirt"
+	managedClusterInstallAddonLabelValue = "true"
+
+	defaultInstallNamespace   = "kubevirt-hyperconverged"
+	defaultHyperConvergedName = "kubevirt-hyperconverged"
 )
 
 //go:embed manifests
@@ -44,8 +49,8 @@ func getDefaultValues(cluster *clusterv1.ManagedCluster, addon *addonv1alpha1.Ma
 		KubeConfigSecret   string
 	}{
 		ClusterName:        cluster.Name,
-		HyperConvergedName: hyperConvergedName,
-		InstallNamespace:   installNamespace,
+		HyperConvergedName: defaultHyperConvergedName,
+		InstallNamespace:   defaultInstallNamespace,
 		KubeConfigSecret:   fmt.Sprintf("%s-hub-kubeconfig", addon.Name),
 	}
 
@@ -61,8 +66,8 @@ func agentHealthProber() *agent.HealthProber {
 					ResourceIdentifier: workv1.ResourceIdentifier{
 						Group:     "hco.kubevirt.io",
 						Resource:  "hyperconverged",
-						Name:      hyperConvergedName,
-						Namespace: installNamespace,
+						Name:      defaultHyperConvergedName,
+						Namespace: defaultInstallNamespace,
 					},
 					ProbeRules: []workv1.FeedbackRule{
 						{
@@ -107,12 +112,6 @@ func Run(ctx context.Context, kubeConfig *rest.Config) error {
 		return err
 	}
 
-	registrationOption := newRegistrationOption(
-		kubeConfig,
-		addonName,
-		rand.String(5),
-	)
-
 	agentAddon, err := addonfactory.NewAgentAddonFactory(addonName, fs, "manifests").
 		WithConfigGVRs(addonfactory.AddOnDeploymentConfigGVR).
 		WithGetValuesFuncs(
@@ -122,8 +121,16 @@ func Run(ctx context.Context, kubeConfig *rest.Config) error {
 				addonfactory.ToAddOnDeloymentConfigValues,
 			),
 		).
-		WithAgentRegistrationOption(registrationOption).
-		WithInstallStrategy(agent.InstallAllStrategy(installNamespace)).
+		WithAgentRegistrationOption(newRegistrationOption(
+			kubeConfig,
+			addonName,
+			rand.String(5),
+		)).
+		WithInstallStrategy(agent.InstallByLabelStrategy(defaultInstallNamespace, v1.LabelSelector{
+			MatchLabels: map[string]string{
+				managedClusterInstallAddonLabel: managedClusterInstallAddonLabelValue,
+			},
+		})).
 		WithAgentHealthProber(agentHealthProber()).
 		BuildTemplateAgentAddon()
 	if err != nil {
