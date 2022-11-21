@@ -3,11 +3,11 @@ package main
 import (
 	goflag "flag"
 	"fmt"
+	"github.com/0xFelix/kubevirt-addon-manager/pkg/controller"
 	"math/rand"
 	"os"
 	"time"
 
-	"github.com/0xFelix/kubevirt-addon-manager/controller"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	utilflag "k8s.io/component-base/cli/flag"

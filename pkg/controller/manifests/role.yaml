@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: klusterlet-work-sa-kubevirt
+  namespace: {{ .InstallNamespace }}
+rules:
+  - resources: ["operatorgroups", "subscriptions"]
+    apiGroups: ["operators.coreos.com"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  - resources: ["hyperconvergeds"]
+    apiGroups: ["hco.kubevirt.io"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]

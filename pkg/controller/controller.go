@@ -1,21 +1,19 @@
 package controller
 
 import (
-	"context"
 	"embed"
 	"fmt"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/rand"
+	hcov1beta1 "github.com/kubevirt/hyperconverged-cluster-operator/api/v1beta1"
+	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog/v2"
 	"open-cluster-management.io/addon-framework/examples/rbac"
 	"open-cluster-management.io/addon-framework/pkg/addonfactory"
-	"open-cluster-management.io/addon-framework/pkg/addonmanager"
 	"open-cluster-management.io/addon-framework/pkg/agent"
 	"open-cluster-management.io/addon-framework/pkg/utils"
 	addonv1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
-	addonclient "open-cluster-management.io/api/client/addon/clientset/versioned"
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
 	workv1 "open-cluster-management.io/api/work/v1"
 )
@@ -33,7 +31,15 @@ const (
 //go:embed manifests
 var fs embed.FS
 
-func newRegistrationOption(kubeConfig *rest.Config, addonName, agentName string) *agent.RegistrationOption {
+func scheme() *runtime.Scheme {
+	s := runtime.NewScheme()
+	_ = operatorsv1.AddToScheme(s)
+	_ = operatorsv1alpha1.AddToScheme(s)
+	_ = hcov1beta1.AddToScheme(s)
+	return s
+}
+
+func registrationOption(kubeConfig *rest.Config, addonName, agentName string) *agent.RegistrationOption {
 	return &agent.RegistrationOption{
 		CSRConfigurations: agent.KubeClientSignerConfigurations(addonName, agentName),
 		CSRApproveCheck:   utils.DefaultCSRApprover(agentName),
@@ -41,7 +47,7 @@ func newRegistrationOption(kubeConfig *rest.Config, addonName, agentName string)
 	}
 }
 
-func getDefaultValues(cluster *clusterv1.ManagedCluster, addon *addonv1alpha1.ManagedClusterAddOn) (addonfactory.Values, error) {
+func defaultValues(cluster *clusterv1.ManagedCluster, addon *addonv1alpha1.ManagedClusterAddOn) (addonfactory.Values, error) {
 	manifestConfig := struct {
 		ClusterName        string
 		HyperConvergedName string
@@ -65,7 +71,7 @@ func agentHealthProber() *agent.HealthProber {
 				{
 					ResourceIdentifier: workv1.ResourceIdentifier{
 						Group:     "hco.kubevirt.io",
-						Resource:  "hyperconverged",
+						Resource:  "hyperconvergeds",
 						Name:      defaultHyperConvergedName,
 						Namespace: defaultInstallNamespace,
 					},
@@ -74,8 +80,8 @@ func agentHealthProber() *agent.HealthProber {
 							Type: workv1.JSONPathsType,
 							JsonPaths: []workv1.JsonPath{
 								{
-									Name: "Available",
-									Path: "{.status.conditions[?(@.type == 'Available')].status}",
+									Name: "isAvailable",
+									Path: ".status.conditions[?(@.type==\"Available\")].status",
 								},
 							},
 						},
@@ -87,67 +93,16 @@ func agentHealthProber() *agent.HealthProber {
 					return fmt.Errorf("no values are probed for hyperconverged %s/%s", identifier.Namespace, identifier.Name)
 				}
 				for _, value := range result.Values {
-					if value.Name != "Available" {
+					if value.Name != "isAvailable" {
 						continue
 					}
 					if *value.Value.String == "True" {
 						return nil
 					}
-					return fmt.Errorf("Available is %s for hyperconverged %s/%s", *value.Value.String, identifier.Namespace, identifier.Name)
+					return fmt.Errorf("isAvailable is %s for hyperconverged %s/%s", *value.Value.String, identifier.Namespace, identifier.Name)
 				}
-				return fmt.Errorf("Available is not probed")
+				return fmt.Errorf("isAvailable is not probed")
 			},
 		},
 	}
-}
-
-func Run(ctx context.Context, kubeConfig *rest.Config) error {
-	client, err := addonclient.NewForConfig(kubeConfig)
-	if err != nil {
-		return err
-	}
-
-	mgr, err := addonmanager.New(kubeConfig)
-	if err != nil {
-		return err
-	}
-
-	agentAddon, err := addonfactory.NewAgentAddonFactory(addonName, fs, "manifests").
-		WithConfigGVRs(addonfactory.AddOnDeploymentConfigGVR).
-		WithGetValuesFuncs(
-			getDefaultValues,
-			addonfactory.GetAddOnDeloymentConfigValues(
-				addonfactory.NewAddOnDeloymentConfigGetter(client),
-				addonfactory.ToAddOnDeloymentConfigValues,
-			),
-		).
-		WithAgentRegistrationOption(newRegistrationOption(
-			kubeConfig,
-			addonName,
-			rand.String(5),
-		)).
-		WithInstallStrategy(agent.InstallByLabelStrategy(defaultInstallNamespace, v1.LabelSelector{
-			MatchLabels: map[string]string{
-				managedClusterInstallAddonLabel: managedClusterInstallAddonLabelValue,
-			},
-		})).
-		WithAgentHealthProber(agentHealthProber()).
-		BuildTemplateAgentAddon()
-	if err != nil {
-		klog.Errorf("failed to build agent %v", err)
-		return err
-	}
-
-	err = mgr.AddAgent(agentAddon)
-	if err != nil {
-		klog.Fatal(err)
-	}
-
-	err = mgr.Start(ctx)
-	if err != nil {
-		klog.Fatal(err)
-	}
-	<-ctx.Done()
-
-	return nil
 }

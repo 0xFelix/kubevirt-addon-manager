@@ -11,7 +11,7 @@ COPY vendor/ vendor/
 # Copy the go source
 COPY Makefile Makefile
 COPY main.go main.go
-COPY controller/ controller/
+COPY pkg/ pkg/
 
 RUN make build
 
