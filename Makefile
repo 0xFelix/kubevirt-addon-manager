@@ -39,7 +39,7 @@ build: ## Build manager binary
 	go build -mod vendor -o bin/manager main.go
 
 .PHONY: run
-run: manager ## Run the manager controller outside the cluster
+run: build ## Run the manager controller outside the cluster
 	${LOCALBIN}/manager controller --kubeconfig ${KUBECONFIG}
 
 .PHONY: container-build
