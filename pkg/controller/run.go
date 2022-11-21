@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	addonName = "kubevirt-addon"
+	addonName = "kubevirt"
 )
 
 func Run(ctx context.Context, kubeConfig *rest.Config) error {
