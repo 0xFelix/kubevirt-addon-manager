@@ -4,3 +4,5 @@ images:
 - name: manager
   newName: quay.io/fmatouschek/kubevirt-addon-manager
   newTag: latest
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
