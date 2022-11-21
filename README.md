@@ -54,7 +54,7 @@ kind: ManagedClusterAddOn
 metadata:
   name: kubevirt
   namespace: <managed_cluster_namespace>
-spec: { }
+spec: {}
 ```
 
 ## Development
