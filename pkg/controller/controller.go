@@ -7,6 +7,7 @@ import (
 	hcov1beta1 "github.com/kubevirt/hyperconverged-cluster-operator/api/v1beta1"
 	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	k8sv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"open-cluster-management.io/addon-framework/examples/rbac"
@@ -19,8 +20,6 @@ import (
 )
 
 const (
-	addonName = "kubevirt-addon"
-
 	managedClusterInstallAddonLabel      = "addons.open-cluster-management.io/kubevirt"
 	managedClusterInstallAddonLabelValue = "true"
 
@@ -47,7 +46,7 @@ func registrationOption(kubeConfig *rest.Config, addonName, agentName string) *a
 	}
 }
 
-func defaultValues(cluster *clusterv1.ManagedCluster, addon *addonv1alpha1.ManagedClusterAddOn) (addonfactory.Values, error) {
+func getDefaultValues(cluster *clusterv1.ManagedCluster, addon *addonv1alpha1.ManagedClusterAddOn) (addonfactory.Values, error) {
 	manifestConfig := struct {
 		ClusterName        string
 		HyperConvergedName string
@@ -61,6 +60,14 @@ func defaultValues(cluster *clusterv1.ManagedCluster, addon *addonv1alpha1.Manag
 	}
 
 	return addonfactory.StructToValues(manifestConfig), nil
+}
+
+func installStrategy() *agent.InstallStrategy {
+	return agent.InstallByLabelStrategy(defaultInstallNamespace, k8sv1.LabelSelector{
+		MatchLabels: map[string]string{
+			managedClusterInstallAddonLabel: managedClusterInstallAddonLabelValue,
+		},
+	})
 }
 
 func agentHealthProber() *agent.HealthProber {
