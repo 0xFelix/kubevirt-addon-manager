@@ -3,4 +3,17 @@ kind: HyperConverged
 metadata:
   name: {{ .HyperConvergedName }}
   namespace: {{ .InstallNamespace }}
-spec: {}
+spec:
+  certConfig:
+    ca:
+      duration: 48h0m0s
+      renewBefore: 24h0m0s
+    server:
+      duration: 24h0m0s
+      renewBefore: 12h0m0s
+  featureGates:
+    deployTektonTaskResources: false
+    enableCommonBootImageImport: true
+    nonRoot: true
+    sriovLiveMigration: true
+    withHostPassthroughCPU: false
