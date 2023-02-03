@@ -36,7 +36,7 @@ lint: vet golangci-lint ## Lint source code.
 
 .PHONY: build
 build: ## Build manager binary
-	go build -mod vendor -o bin/manager main.go
+	CGO_ENABLED=0 go build -ldflags '-s -w' -mod vendor -o bin/manager main.go
 
 .PHONY: run
 run: build ## Run the manager controller outside the cluster

@@ -431,9 +431,6 @@ type Devices struct {
 	// Defaults to false.
 	// +optional
 	AutoattachInputDevice *bool `json:"autoattachInputDevice,omitempty"`
-	// Whether to attach the VSOCK CID to the VM or not.
-	// VSOCK access will be available if set to true. Defaults to false.
-	AutoattachVSOCK *bool `json:"autoattachVSOCK,omitempty"`
 	// Whether to have random number generator from host
 	// +optional
 	Rng *Rng `json:"rng,omitempty"`
@@ -631,7 +628,7 @@ type DiskBus string
 const (
 	DiskBusSCSI   DiskBus = "scsi"
 	DiskBusSATA   DiskBus = "sata"
-	DiskBusVirtio DiskBus = VirtIO
+	DiskBusVirtio DiskBus = "virtio"
 	DiskBusUSB    DiskBus = "usb"
 )
 
